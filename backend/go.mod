@@ -1,4 +1,4 @@
-module github.com/shenikar/theme-match
+module github.com/shenikar/theme-match/backend
 
 go 1.25.5
 

@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import Confetti from "react-confetti";
 
 interface Theme {
   id: string;
@@ -19,8 +21,15 @@ export default function ResultPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
+  const [size, setSize] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
+    // Эффект конфетти и звук
+    const audio = new Audio("/win.mp3");
+    audio.play().catch(e => console.error("Audio play failed:", e));
+    
+    setSize({ width: window.innerWidth, height: window.innerHeight });
+
     // Получаем результаты из localStorage
     const storedResults = localStorage.getItem('tournamentResults');
     if (storedResults) {
@@ -36,39 +45,29 @@ export default function ResultPage() {
   }, []);
 
   const handleRetakeTest = () => {
-    // Просто перенаправляем на страницу теста, где турнир начнется заново
     router.push("/test");
   };
 
   const copyToClipboard = (text: string | undefined, themeId: string) => {
     if (!navigator.clipboard) {
-      alert("Функция копирования не доступна в вашем браузере или на этом соединении (требуется HTTPS или localhost).");
-      console.error("Clipboard API not available.");
+      alert("Функция копирования не доступна.");
       return;
     }
     if (text) {
       navigator.clipboard.writeText(text).then(() => {
         setCopied(themeId);
-        setTimeout(() => setCopied(null), 2000); // Сбрасываем статус через 2 секунды
-      }).catch(err => {
-        console.error("Failed to copy text: ", err);
-        alert("Не удалось скопировать текст.");
-      });
+        setTimeout(() => setCopied(null), 2000);
+      }).catch(err => console.error("Failed to copy:", err));
     }
   };
   
-  if (loading) {
-    return <div className="flex items-center justify-center min-h-screen text-xl">Загрузка...</div>;
-  }
+  if (loading) return <div className="flex items-center justify-center min-h-screen">Загрузка...</div>;
 
   if (error || !results) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen text-red-500 text-xl">
+      <div className="flex flex-col items-center justify-center min-h-screen text-red-500">
         <p>{error || "Произошла ошибка."}</p>
-        <button
-          onClick={() => router.push('/')}
-          className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg"
-        >
+        <button onClick={() => router.push('/')} className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg">
           На главную
         </button>
       </div>
@@ -78,46 +77,78 @@ export default function ResultPage() {
   const { winner, runnerUp } = results;
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 p-4">
-      <main className="flex flex-col items-center text-center space-y-10 p-8 bg-white dark:bg-gray-800 rounded-lg shadow-xl">
-        <h1 className="text-4xl font-bold tracking-tight text-amber-400">
-          🏆 Победитель Турнира 🏆
-        </h1>
+    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-black text-white flex items-center justify-center p-4 sm:p-6 lg:p-8 pb-[env(safe-area-inset-bottom)] overflow-hidden">
+      <Confetti
+        width={size.width}
+        height={size.height}
+        numberOfPieces={250}
+        recycle={false}
+        gravity={0.1}
+      />
+      <main className="w-full max-w-xl flex flex-col items-center space-y-8 sm:space-y-10">
 
-        {/* Карточка Победителя */}
-        <div className="p-6 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-2xl w-full max-w-md">
-          <h2 className="text-3xl font-bold">{winner.name}</h2>
-          <div className="flex items-center justify-center space-x-4 mt-4">
-            <button
-              onClick={() => copyToClipboard(winner.name, winner.id)}
-              className="px-4 py-2 bg-white text-blue-600 font-semibold rounded-lg hover:bg-gray-100 transition duration-300"
-            >
-              {copied === winner.id ? "Скопировано!" : "Копировать"}
-            </button>
-            <a
-              href={`https://marketplace.visualstudio.com/search?term=${winner.name}&target=VSCode&category=Themes&sortBy=Relevance`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition duration-300"
-            >
-              Marketplace
-            </a>
-          </div>
-        </div>
-
-        {/* Карточка Второго места */}
-        <div className="p-4 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 w-full max-w-md">
-            <h3 className="text-2xl font-semibold text-gray-500 dark:text-gray-400">2-е место</h3>
-            <p className="text-xl font-bold">{runnerUp.name}</p>
-        </div>
-
-
-        <button
-          onClick={handleRetakeTest}
-          className="mt-8 px-8 py-3 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-75 transition duration-300"
+        {/* WINNER CARD */}
+        <motion.div
+          initial={{ scale: 0.5, opacity: 0, y: 50 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          transition={{ type: "spring", stiffness: 120, damping: 15, delay: 0.2 }}
+          className="relative w-full max-w-sm sm:max-w-md lg:max-w-lg group"
         >
-          Пройти тест заново
-        </button>
+          <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 via-pink-500 to-blue-500 rounded-2xl blur opacity-60 group-hover:opacity-80 transition duration-500" />
+          <div className="relative bg-gray-900/80 backdrop-blur-xl border border-white/10 rounded-2xl p-6 sm:p-8 text-center shadow-2xl">
+            <div className="text-sm text-amber-400 mb-2 font-bold tracking-wider">
+              🏆 WINNER
+            </div>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white">
+              {winner.name}
+            </h2>
+            <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
+              <button
+                onClick={() => copyToClipboard(winner.name, winner.id)}
+                className="px-5 py-3 sm:py-2 rounded-xl bg-white/10 hover:bg-white/20 transition border border-white/10 text-base sm:text-sm"
+              >
+                {copied === winner.id ? "✓ Copied" : "Copy"}
+              </button>
+              <a
+                href={`https://marketplace.visualstudio.com/search?term=${encodeURIComponent(winner.name)}&target=VSCode&category=Themes&sortBy=Relevance`}
+                target="_blank" rel="noopener noreferrer"
+                className="px-5 py-3 sm:py-2 rounded-xl bg-purple-600 hover:bg-purple-500 transition text-base sm:text-sm"
+              >
+                Marketplace
+              </a>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* RUNNER UP */}
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.8 }}
+            className="w-full max-w-sm sm:max-w-md lg:max-w-lg"
+        >
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-4 sm:p-5 flex items-center justify-between hover:bg-white/10 transition">
+                <div>
+                <p className="text-xs text-gray-400">Runner-up</p>
+                <p className="text-lg sm:text-xl font-semibold">{runnerUp.name}</p>
+                </div>
+                <div className="text-gray-400">🥈</div>
+            </div>
+        </motion.div>
+
+        {/* ACTION */}
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1 }}
+        >
+            <button
+                onClick={handleRetakeTest}
+                className="mt-6 px-8 sm:px-10 py-3 sm:py-4 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 hover:scale-105 transition font-semibold shadow-lg text-base lg:text-lg"
+            >
+                Run Again
+            </button>
+        </motion.div>
       </main>
     </div>
   );

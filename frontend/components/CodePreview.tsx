@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { codeToHtml } from 'shiki';
+import { getHighlighterInstance } from "../lib/shiki";
 
 const defaultCode = `async function fetchUser(id: number) {
   const response = await fetch(\`/api/users/\${id}\`);
@@ -31,7 +31,8 @@ const CodePreview: React.FC<CodePreviewProps> = ({
     const highlight = async () => {
       setLoading(true);
       try {
-        const html = await codeToHtml(code, {
+        const highlighter = await getHighlighterInstance();
+        const html = highlighter.codeToHtml(code, {
           lang,
           theme: themeId,
         });

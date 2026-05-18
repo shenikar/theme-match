@@ -1,11 +1,15 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import ThemeCard from "../../components/ThemeCard";
+import dynamic from "next/dynamic";
 import { getThemes } from "../../lib/api";
+
+const ThemeCard = dynamic(() => import("../../components/ThemeCard"), {
+  ssr: false,
+});
 
 // --- Types and Constants ---
 interface Theme { id: string; name: string; }
@@ -62,9 +66,9 @@ const shuffleArray = (array: any[]) => {
 
 // --- Animation Variants ---
 const pageVariants = {
-  initial: { opacity: 0, scale: 0.98, filter: "blur(10px)" },
-  animate: { opacity: 1, scale: 1, filter: "blur(0px)" },
-  exit: { opacity: 0, scale: 1.02, filter: "blur(10px)" },
+  initial: { opacity: 0, scale: 0.98 },
+  animate: { opacity: 1, scale: 1 },
+  exit: { opacity: 0, scale: 1.02 },
 };
 
 const matchContainerVariants = {
@@ -84,6 +88,10 @@ export default function TestPage() {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const currentMatch = useMemo(() => {
+    return rounds[currentRoundIndex]?.[currentMatchIndex];
+  }, [rounds, currentRoundIndex, currentMatchIndex]);
 
   const initializeTournament = useCallback(async () => {
     setLoading(true);
@@ -118,8 +126,8 @@ export default function TestPage() {
     setIsTransitioning(true);
 
     setTimeout(() => {
-        const newWinners = [...roundWinners, winner];
         if (currentMatchIndex + 1 >= rounds[currentRoundIndex].length) {
+            const newWinners = [...roundWinners, winner];
             if (finalMatch) {
                 const runnerUp = finalMatch.find(t => t.id !== winner.id);
                 localStorage.setItem('tournamentResults', JSON.stringify({ winner, runnerUp }));
@@ -139,7 +147,7 @@ export default function TestPage() {
             setRoundWinners([]);
         } else {
             setCurrentMatchIndex(prev => prev + 1);
-            setRoundWinners(newWinners);
+            setRoundWinners(prev => [...prev, winner]);
         }
         setIsTransitioning(false);
     }, 400);
@@ -149,13 +157,12 @@ export default function TestPage() {
     if (totalMatches === 1) return "Финал";
     if (totalMatches === 2) return "Полуфинал";
     if (totalMatches === 4) return "Четвертьфинал";
-    return `Раунд 1/${totalMatches}`;
+    return `Round 1/${totalMatches}`;
   };
 
   if (loading) return <div className="flex items-center justify-center min-h-screen">Загрузка...</div>;
   if (error) return <div className="flex flex-col items-center justify-center min-h-screen text-red-500"><p>{error}</p><button onClick={initializeTournament}>Попробовать снова</button></div>;
   
-  const currentMatch = rounds[currentRoundIndex]?.[currentMatchIndex];
   if (!currentMatch) return <div className="flex items-center justify-center min-h-screen">Создание раунда...</div>;
 
   const totalMatchesInRound = rounds[currentRoundIndex].length;
@@ -176,7 +183,7 @@ export default function TestPage() {
       >
         <div className="text-center mb-8">
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold">{roundName}</h2>
-            <p className="text-lg sm:text-xl text-gray-400">Матч {currentMatchIndex + 1}/{totalMatchesInRound}</p>
+            <p className="text-lg sm:text-xl text-gray-400">Match {currentMatchIndex + 1}/{totalMatchesInRound}</p>
         </div>
 
         <div className="w-full max-w-3xl lg:max-w-4xl mb-8 bg-gray-700 rounded-full h-2">
@@ -211,7 +218,7 @@ export default function TestPage() {
               className="px-6 sm:px-8 py-2 sm:py-3 bg-gray-700 text-gray-200 rounded-lg shadow hover:bg-gray-600"
               whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
             >
-              На главную
+              Main page
             </motion.button>
           </Link>
         </div>

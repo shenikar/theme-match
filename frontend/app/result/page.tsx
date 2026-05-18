@@ -68,7 +68,7 @@ export default function ResultPage() {
       <div className="flex flex-col items-center justify-center min-h-screen text-red-500">
         <p>{error || "Произошла ошибка."}</p>
         <button onClick={() => router.push('/')} className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg">
-          На главную
+          Main page
         </button>
       </div>
     );

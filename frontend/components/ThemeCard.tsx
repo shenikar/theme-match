@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import { memo } from "react";
 import { motion } from "framer-motion";
 import CodePreview from "./CodePreview";
 
@@ -36,12 +36,12 @@ const cardVariants = {
   }),
 };
 
-const ThemeCard: React.FC<ThemeCardProps> = ({
+function ThemeCard({
   theme,
   code,
   onSelect,
   position,
-}) => {
+}: ThemeCardProps) {
   return (
     <motion.div
       className="relative w-full cursor-pointer rounded-2xl overflow-hidden"
@@ -55,7 +55,7 @@ const ThemeCard: React.FC<ThemeCardProps> = ({
       transition={{ type: "spring", stiffness: 400, damping: 17 }}
       
       // Анимации появления/исчезновения
-      variants={cardVariants}
+      //variants={cardVariants}
       custom={position} // Передаем 'left' или 'right' в variants
     >
       <div className="absolute inset-0 bg-white/5 backdrop-blur-[12px] z-0"></div>
@@ -70,4 +70,4 @@ const ThemeCard: React.FC<ThemeCardProps> = ({
   );
 };
 
-export default ThemeCard;
+export default memo(ThemeCard);
